@@ -1,0 +1,48 @@
+├── annotation                 # Directory for annotation files
+├── assembly                   # Directory for assembly-related files
+├── raw_data                   # Raw sequencing data and quality reports
+│   ├── SRR2584868_1.fastq.gz   # Raw read 1
+│   ├── SRR2584868_1_fastqc.html # QC report for read 1
+│   ├── SRR2584868_1_fastqc.zip  # Compressed QC report for read 1
+│   ├── SRR2584868_2.fastq.gz   # Raw read 2
+│   ├── SRR2584868_2_fastqc.html # QC report for read 2
+│   └── SRR2584868_2_fastqc.zip  # Compressed QC report for read 2
+├── reference                  # Reference genome files
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna   # Reference genome sequence
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna.amb # Reference genome index files
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna.ann
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna.bwt
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna.fai
+│   ├── GCF_000005845.2_ASM584v2_genomic.fna.pac
+│   └── GCF_000005845.2_ASM584v2_genomic.fna.sa
+├── results                    # Results from alignment, variant calling, and other analysis
+│   ├── SRR2584868_1_paired_fastqc.html # QC report for paired read 1
+│   ├── SRR2584868_1_paired_fastqc.zip  # Compressed QC report for paired read 1
+│   ├── SRR2584868_2_paired_fastqc.html # QC report for paired read 2
+│   ├── SRR2584868_2_paired_fastqc.zip  # Compressed QC report for paired read 2
+│   ├── aligned_reads.bam        # Aligned reads in BAM format
+│   ├── aligned_reads.sam        # Aligned reads in SAM format
+│   ├── aligned_reads_sorted.bam # Sorted BAM file for further analysis
+│   ├── aligned_reads_sorted.bam.bai # BAM index file for fast access
+│   ├── extracted_region.bam     # Extracted region from BAM file
+│   ├── filtered_variants.vcf    # VCF file containing filtered variants
+│   ├── igv_session.xml          # IGV session file with loaded tracks
+│   ├── igv_snapshot.png         # Snapshot image from IGV
+│   ├── variants.bcf             # Binary compressed format for variants
+│   └── variants.vcf             # Variants in text-based format
+├── tools                       # External tools used in the project (e.g., Trimmomatic)
+│   └── Trimmomatic-0.39         # Folder for Trimmomatic software
+│       ├── LICENSE              # Trimmomatic license file
+│       ├── adapters             # Folder for adapter sequences used in trimming
+│       │   ├── NexteraPE-PE.fa
+│       │   ├── TruSeq2-PE.fa
+│       │   ├── TruSeq2-SE.fa
+│       │   ├── TruSeq3-PE-2.fa
+│       │   ├── TruSeq3-PE.fa
+│       │   └── TruSeq3-SE.fa
+│       └── trimmomatic-0.39.jar # Main Trimmomatic JAR file for running trimming operations
+└── trimmed_data                # Trimmed sequencing data after processing
+    ├── SRR2584868_1_paired.fastq.gz  # Trimmed paired read 1
+    ├── SRR2584868_1_unpaired.fastq.gz # Trimmed unpaired read 1
+    ├── SRR2584868_2_paired.fastq.gz  # Trimmed paired read 2
+    └── SRR2584868_2_unpaired.fastq.gz # Trimmed unpaired read 2
