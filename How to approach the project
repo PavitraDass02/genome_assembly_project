@@ -1,0 +1,142 @@
+1. Project Setup and Directory Structure
+
+Directory Structure Overview
+First, create a proper directory structure for your project. This structure will keep your raw data, reference genome, results, tools, and intermediate data organized. Here's the recommended structure:
+
+genome_assembly_project/
+├── annotation
+├── assembly
+├── raw_data
+├── reference
+├── results
+├── tools
+└── trimmed_data
+
+raw_data/: This directory contains raw sequencing data files and the corresponding quality control reports.
+reference/: Contains the reference genome used for aligning the raw reads. It includes the genomic sequence file (FASTA format) and its index files for alignment.
+trimmed_data/: After preprocessing (trimming and cleaning the raw reads), this folder stores the cleaned data files.
+results/: After analysis, this folder stores the output data, such as aligned reads, variants, and images of visualizations.
+tools/: Contains third-party software/tools, such as Trimmomatic for trimming raw reads and BWA for alignment.
+annotation/ and assembly/: These directories are meant to store additional results related to annotation or genome assembly (e.g., gene annotations, assembly files, etc.).
+
+2. Quality Control of Raw Data
+FastQC is used to perform an initial quality control check on your raw sequencing data. This ensures that the reads are of good quality before proceeding with trimming and alignment.
+
+2.1 FastQC Command
+FastQC produces reports that describe the quality of the raw data. You should run it for both paired-end files (_1.fastq.gz and _2.fastq.gz).
+
+Example FastQC command:
+
+fastqc SRR2584868_1.fastq.gz SRR2584868_2.fastq.gz
+
+Explanation:
+fastqc: The command for running FastQC.
+SRR2584868_1.fastq.gz SRR2584868_2.fastq.gz: These are the input FASTQ files that contain your raw sequencing data.
+
+Terms to understand:
+FASTQ: A file format that contains sequence data along with quality scores.
+Base Quality Scores: Scores that represent the accuracy of each base call in the read, measured by the Phred scale.
+GC Content: The percentage of nucleotides in a sequence that are guanine (G) or cytosine (C).
+
+
+3. Data Preprocessing: Trimming
+After checking the raw data quality, the next step is trimming the reads to remove low-quality bases and adapter sequences. Trimmomatic is a tool used to perform this task.
+
+3.1 Trimmomatic Command
+java -jar trimmomatic-0.39.jar PE -threads 4 SRR2584868_1.fastq.gz SRR2584868_2.fastq.gz \
+../trimmed_data/SRR2584868_1_paired.fastq.gz ../trimmed_data/SRR2584868_1_unpaired.fastq.gz \
+../trimmed_data/SRR2584868_2_paired.fastq.gz ../trimmed_data/SRR2584868_2_unpaired.fastq.gz \
+ILLUMINACLIP:/path/to/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36
+
+Explanation:
+
+java -jar trimmomatic-0.39.jar PE: Runs Trimmomatic in paired-end mode.
+-threads 4: Uses 4 CPU threads to speed up processing.
+ILLUMINACLIP: Removes adapter sequences using the provided adapter file (TruSeq3-PE.fa).
+LEADING:3 TRAILING:3: Removes bases from the start (LEADING) or end (TRAILING) of the read if their quality is below 3.
+SLIDINGWINDOW:4:20: Trims when the average quality score in a 4-base sliding window is below 20.
+MINLEN:36: Discards reads shorter than 36 bases.
+
+Terms to understand:
+Adapter Sequences: Short DNA sequences that are ligated to the ends of DNA fragments to facilitate sequencing.
+Sliding Window: A technique that assesses the average quality of a window of a fixed size (e.g., 4 bases) along the read.
+
+4. Read Alignment
+Once the data is cleaned, the next step is aligning the reads to a reference genome. This allows us to determine the location of each read in the genome.
+
+4.1 BWA Command
+BWA (Burrows-Wheeler Aligner) is used to align the trimmed reads to the reference genome.
+
+bwa mem -t 4 /path/to/reference/GCF_000005845.2_ASM584v2_genomic.fna \
+/path/to/trimmed_data/SRR2584868_1_paired.fastq.gz \
+/path/to/trimmed_data/SRR2584868_2_paired.fastq.gz > aligned_reads.sam
+
+Explanation:
+
+bwa mem: This is the algorithm used for aligning paired-end reads.
+-t 4: Uses 4 threads for parallel computation.
+/path/to/reference/: Path to the reference genome.
+SRR2584868_1_paired.fastq.gz SRR2584868_2_paired.fastq.gz: These are the paired-end input files.
+aligned_reads.sam: The output SAM file containing the aligned reads.
+Terms to understand:
+
+SAM Format: A file format for storing alignment information, where each line represents a read and its alignment information to the reference genome.
+Reference Genome: A known genome used as a template to align sequencing reads.
+
+5. Sorting and Indexing BAM Files
+SAM files need to be converted to BAM files (Binary Alignment Map) and sorted for further analysis, such as variant calling.
+
+5.1 SAMtools Commands
+samtools view -bS aligned_reads.sam > aligned_reads.bam
+samtools sort aligned_reads.bam -o aligned_reads_sorted.bam
+samtools index aligned_reads_sorted.bam
+
+Explanation:
+
+samtools view: Converts the SAM file to BAM format.
+samtools sort: Sorts the BAM file by the genomic coordinates.
+samtools index: Creates an index file (.bai) for the BAM file, which speeds up access to specific regions of the genome.
+Terms to understand:
+
+BAM Format: A binary version of the SAM format that is much more efficient for storage and processing.
+Indexing: Creates a lookup table for rapid retrieval of specific alignments in the BAM file.
+
+6. Variant Calling
+Variant calling identifies genetic variations such as single nucleotide polymorphisms (SNPs) and insertions or deletions (INDELs) from the aligned reads.
+
+6.1 BCFtools and Samtools Commands
+samtools mpileup -Ou -f /path/to/reference/GCF_000005845.2_ASM584v2_genomic.fna \
+aligned_reads_sorted.bam | bcftools call -mv -Ob -o variants.bcf
+
+Explanation:
+
+samtools mpileup: Creates a pileup file, which summarizes the alignment data.
+bcftools call: Calls variants (SNPs and INDELs) from the pileup.
+Terms to understand:
+
+SNPs: Variations in a single base pair.
+INDELs: Variations caused by insertions or deletions of bases.
+Pileup: A summary of the bases at each position in the reference genome across all reads.
+
+7. Variant Filtering
+Variants with low quality or those that are unreliable need to be filtered out.
+
+7.1 BCFtools Filter Command
+bcftools filter -i 'QUAL>30' variants.vcf > filtered_variants.vcf
+
+Explanation:
+-i 'QUAL>30': Filters out variants with a quality score less than 30.
+variants.vcf: The VCF file containing all the variants.
+filtered_variants.vcf: The output file with filtered variants.
+
+Terms to understand:
+VCF Format: Variant Call Format, which contains information about genetic variants.
+Quality Score (QUAL): A measure of the confidence in the variant call.
+
+8. Visualization
+Visualizing your results is an important part of understanding the quality of your data and the distribution of variants.
+
+8.1 IGV (Integrative Genomics Viewer)
+IGV is a tool for visualizing sequence alignments, coverage, and variants. After generating the aligned reads and variant calls, you can load the files into IGV for visualization.
+IGV helps you understand how the data aligns to the reference genome and where the variants are located.
+
